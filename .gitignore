@@ -132,3 +132,5 @@ dmypy.json
 # large files
 model.bin
 udpipe_syntagrus.model
+test hobo.txt
+test hobo stem.txt
