@@ -210,13 +210,27 @@ if not os.path.isfile(udpipe_filename):
     print('UDPipe model not found. Downloading...', file=sys.stderr)
     wget.download(udpipe_model_url)
 
-print('\nLoading the model...', file=sys.stderr)
+print('\nLoading the stemming model...', file=sys.stderr)
 model = Model.load(udpipe_filename)
 process_pipeline = Pipeline(model, 'tokenize', Pipeline.DEFAULT, Pipeline.DEFAULT, 'conllu')
 
-print('Processing input...', file=sys.stderr)
-for line in sys.stdin:
-    res = unify_sym(line.strip())
-    output = process(process_pipeline, text=res)
-    print(' '.join(output))
-print ('Ready!')
+# textfile = 'Конституция старая UTF-8.txt'
+
+def stem(textfile):
+    out = open('stemmed ' + textfile, 'w')
+    for line in open(textfile).readlines():
+        res = unify_sym(line.strip())
+        output = process(process_pipeline, text=res)
+        out.write(' '.join(output) + '\n')
+    print ('Stemming ready!')
+
+
+
+
+
+
+# modelfile = 'udpipe_syntagrus.model'
+# textfile = 'Конституция старая UTF-8.txt'
+
+# text = open(textfile, 'r', encoding='utf-8').read()
+# process(text=text, modelfile=modelfile)
