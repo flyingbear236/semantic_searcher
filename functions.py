@@ -47,7 +47,7 @@ def stem(doc):
     p.stem(textfile = doc_changed)
 
 
-doc = 'Конст.txt'
+doc = 'Hobbit.txt'
 
 
 
@@ -59,6 +59,7 @@ raw = open('aux ' + doc).read()
 
 raw = divide_1D(raw)
 print (len(raw))
+kfc = raw[:]
 # copyraw = raw
 raw = divide_2D(raw)
 
@@ -95,6 +96,7 @@ stemmed_raw = divide_2D(stemmed_raw)
 def get_sums(text_2D):
     sums = []
     lis = []
+    kfc1 = kfc[:]
     ia = 0
     for article in text_2D: 
         ia += 1 
@@ -108,7 +110,8 @@ def get_sums(text_2D):
         if i == 0:
             # print (ia)
             # raw.remove(raw[ia])
-            lis.append(ia)
+            # print(ia)
+            kfc.remove(kfc1[text_2D.index(article)])
             # print ('!')
         else:
             for word in inmodel:
@@ -121,9 +124,10 @@ def get_sums(text_2D):
 
         # sum1 = np.divide( sum1 , len(article)) 
         # sum1 = sum1 / len(article)
-    lis.sort(reverse=True)
-    for i in lis:
-        raw.remove(raw[i])  
+    # lis.sort()
+    
+    # for i in lis:
+    #     kfc.remove(kfc1[i])  
     sums = np.vstack(sums)
 
     np.savetxt('saved.txt', sums)
@@ -162,9 +166,10 @@ def search_search(word, sums = sums, raw = raw):
     print ('Нашлась хуйня номер ', str(index[0])[1:-1])
     print (index)
     print ('ok')
-    print (raw[int(str(index[0])[1:-1])])
+    return int(str(index[0])[1:-1]) 
 
-search_search('экология_NOUN')
+ss = search_search('гоблин_NOUN')
+print (kfc[ss])
 print('========================================')
 
 
@@ -187,14 +192,14 @@ def search_by_vec(doc, word):
 
     print (index)
 
-    return int(str(index[0])[1:-1])
+    return int(str(index[0])[1:-1]) 
 
 vectores = 'saved.txt'
-word = 'ребенок_NOUN'
+word = 'космос_NOUN'
 
 qw = search_by_vec(vectores, word)
 
-print (raw[qw])
+print (kfc[qw])
 
 print ('===============================================')
 
