@@ -17,6 +17,7 @@ def change(doc, divider):
     inp = open(doc, 'r').read()
     new = re.sub(divider + '+', divider, inp)
     new = re.sub(divider, ' qwerty ', new)
+    new = re.sub('[0-9]', '', new)
     new = re.sub('\s+', '', new, 1)
     new = re.sub('\W', ' ', new)
     new = re.sub(' +', ' ', new)
@@ -50,13 +51,14 @@ doc = 'Конст.txt'
 
 
 
-# change(doc, 'Статья')
+# change(doc, '\.')
 
 # stem(doc)
 
 raw = open('aux ' + doc).read()
 
 raw = divide_1D(raw)
+print (len(raw))
 # copyraw = raw
 raw = divide_2D(raw)
 
@@ -68,6 +70,7 @@ raw = divide_2D(raw)
 stemmed_raw = open('stemmed aux '+ doc).read()
 
 stemmed_raw = divide_1D(stemmed_raw)
+print(len(stemmed_raw))
 stemmed_raw = divide_2D(stemmed_raw)
 
 # k = open('test hobo stem.txt', 'w')
@@ -91,34 +94,44 @@ stemmed_raw = divide_2D(stemmed_raw)
 
 def get_sums(text_2D):
     sums = []
-    
-
-    for article in text_2D:  
+    lis = []
+    ia = 0
+    for article in text_2D: 
+        ia += 1 
         sum1 = np.empty(300)
         i = 0
+        inmodel = []
         for word in article:
-            if word in model:
+            if word in model:     
+                inmodel.append(word)
                 i += 1
-                vector = model.get_vector(word)
-                # sum1 =  np.add(sum1, vector)
-                sum1 += vector
         if i == 0:
-            print ('Oppa')
-            continue
+            # print (ia)
+            # raw.remove(raw[ia])
+            lis.append(ia)
+            # print ('!')
         else:
-            # sum1 = np.divide( sum1 , i) 
+            for word in inmodel:
+                vector = model.get_vector(word)
+                sum1 += vector
             sums.append(sum1)
+
+            # sum1 = np.divide( sum1 , i) 
+            
 
         # sum1 = np.divide( sum1 , len(article)) 
         # sum1 = sum1 / len(article)
-        
+    lis.sort(reverse=True)
+    for i in lis:
+        raw.remove(raw[i])  
     sums = np.vstack(sums)
+
     np.savetxt('saved.txt', sums)
-    sums = normalize(sums)
+    # sums = normalize(sums)
     return sums
 
 sums = get_sums(stemmed_raw)
-print(sums.shape)
+print(sums.shape, 'sums shape')
 
 # def closest_from_sums(sums):
 #     i = 0
@@ -142,13 +155,16 @@ def search_search(word, sums = sums, raw = raw):
     print (cosines.shape)
     cos_s = cosines.copy()
     cos_s.sort()
+    while np.isnan(cos_s[-1]):
+        cos_s = np.delete(cos_s, -1)
+        print ('deleted')
     index = np.where(cosines == cos_s[-1])
     print ('Нашлась хуйня номер ', str(index[0])[1:-1])
     print (index)
     print ('ok')
     print (raw[int(str(index[0])[1:-1])])
 
-search_search('ребенок_NOUN')
+search_search('экология_NOUN')
 print('========================================')
 
 
@@ -162,7 +178,13 @@ def search_by_vec(doc, word):
     cosines = model.cosine_similarities(model.get_vector(word), sums)
     cos_s = cosines.copy()
     cos_s.sort()
+    
+    while np.isnan(cos_s[-1]):
+        cos_s = np.delete(cos_s, -1)
+        print ('deleted')
+    np.savetxt('to.txt', cos_s)
     index = np.where(cosines == cos_s[-1])
+
     print (index)
 
     return int(str(index[0])[1:-1])
