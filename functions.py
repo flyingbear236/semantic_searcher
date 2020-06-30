@@ -1,3 +1,7 @@
+from datetime import datetime
+
+begin_time = datetime.now()
+
 import gensim
 import numpy as np
 import re
@@ -47,8 +51,100 @@ def stem(doc):
     p.stem(textfile = doc_changed)
 
 
-doc = 'Hobbit.txt'
 
+def get_sums(text_2D):
+    sums = []
+    output1 = output[:]
+    ia = 0
+    for article in text_2D: 
+        ia += 1 
+        # sum1 = []
+        sum1 = np.empty(300)
+        i = 0
+        for word in article:
+            if word in model:     
+                i += 1
+                vector = model.get_vector(word)
+                sum1 += vector
+                # sum1.append(vector)
+        if i == 0:
+            # print (ia)
+            # raw.remove(raw[ia])
+            # print(ia)
+            # sum1 = []
+            output.remove(output1[text_2D.index(article)])
+            # print ('!')
+        else:   
+            # sum1 = np.vstack(sum1)
+            # sum1 = normalize(sum1)
+            # sum1 = np.mean(sum1, axis = 0)
+            # sum1 = np.sum(sum1, axis = 0)
+            sum1 = np.divide(sum1 , i) 
+            # sum1 = sum1 / i
+            sums.append(sum1)
+        
+    sums = np.vstack(sums)
+    
+    # sums = normalize(sums)
+    return sums
+
+def sums_as_words(sums):
+    i = 0
+    for row in sums:
+        i += 1
+        list_of_tuples = model.similar_by_vector(vector=row, topn=1) 
+        print  ('статья {}'.format(i))
+        print (list_of_tuples[0])
+
+def search(word, sums, n=1):   
+    cosines = model.cosine_similarities(model.get_vector(word), sums)
+    cos_s = cosines.copy()
+    cos_s.sort()
+    while np.isnan(cos_s[-1]):
+        cos_s = np.delete(cos_s, -1)
+        # print ('deleted')
+    # print ('cos_s', cos_s[-1])
+    out = []
+    
+    for i in range (-1, -n-1, -1):
+        # print ('start')
+        # print ('i', i)
+        index = np.where(cosines == cos_s[i])
+        # print (cos_s[i])
+        out.append(int(str(index[0])[1:-1]))
+    # print (index)
+    return out
+
+def search_in_sums_doc(doc, word, n=1):
+    sums = open(doc, 'r').readlines()
+    sums1 = []
+    for vec in sums:
+        vec = [float (vec) for vec in re.split(" ", vec)]
+        sums1.append(vec)
+    sums1 = np.vstack(sums1)    
+    cosines = model.cosine_similarities(model.get_vector(word), sums1)
+    cos_s = cosines.copy()
+    cos_s.sort()
+    while np.isnan(cos_s[-1]):
+        cos_s = np.delete(cos_s, -1)
+    # np.savetxt('to.txt', cos_s)
+    out = []
+    for i in range (-1, -n-1, -1):
+        index = np.where(cosines == cos_s[i])
+        # print (cos_s[i])
+        out.append(int(str(index[0])[1:-1]))
+
+    # print (index)
+
+    return out
+
+
+###
+#  runtime instructions 
+# 
+
+
+doc = 'Hobbit.txt'
 
 
 # change(doc, '\.')
@@ -58,9 +154,8 @@ doc = 'Hobbit.txt'
 raw = open('aux ' + doc).read()
 
 raw = divide_1D(raw)
-print (len(raw))
-kfc = raw[:]
-# copyraw = raw
+output = raw[:]
+
 raw = divide_2D(raw)
 
 # k = open('test hobo.txt', 'w')
@@ -71,137 +166,54 @@ raw = divide_2D(raw)
 stemmed_raw = open('stemmed aux '+ doc).read()
 
 stemmed_raw = divide_1D(stemmed_raw)
-print(len(stemmed_raw))
+print('stemmed', len(stemmed_raw))
 stemmed_raw = divide_2D(stemmed_raw)
 
 # k = open('test hobo stem.txt', 'w')
 # k.write(str(stemmed_raw))
 # k.close()
-# это проверка стиммированного 2д списка
+# это проверка стеммированного 2д списка
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-def get_sums(text_2D):
-    sums = []
-    lis = []
-    kfc1 = kfc[:]
-    ia = 0
-    for article in text_2D: 
-        ia += 1 
-        sum1 = np.empty(300)
-        i = 0
-        inmodel = []
-        for word in article:
-            if word in model:     
-                inmodel.append(word)
-                i += 1
-        if i == 0:
-            # print (ia)
-            # raw.remove(raw[ia])
-            # print(ia)
-            kfc.remove(kfc1[text_2D.index(article)])
-            # print ('!')
-        else:
-            for word in inmodel:
-                vector = model.get_vector(word)
-                sum1 += vector
-            sums.append(sum1)
-
-            # sum1 = np.divide( sum1 , i) 
-            
-
-        # sum1 = np.divide( sum1 , len(article)) 
-        # sum1 = sum1 / len(article)
-    # lis.sort()
-    
-    # for i in lis:
-    #     kfc.remove(kfc1[i])  
-    sums = np.vstack(sums)
-
-    np.savetxt('saved.txt', sums)
-    # sums = normalize(sums)
-    return sums
 
 sums = get_sums(stemmed_raw)
-print(sums.shape, 'sums shape')
 
-# def closest_from_sums(sums):
-#     i = 0
-#     for row in sums:
-#         i += 1
-#         list_of_tuples = model.similar_by_vector(vector=row, topn=1) 
-#         print  ('статья {}'.format(i))
-#         print (list_of_tuples[0])
+print ('sums', sums.shape)
+print ('output', len(output))
+
+np.savetxt('saved.txt', sums)
+
+# print(sums.shape, 'sums shape')
 
 
+word = 'жираф_NOUN'
+
+
+ss = search(word, sums, n=3)
+print('=========fresh========divided=======================')
+for i in ss:
+    print ('Отрывок {}'.format(i))
+    print (output[i])
 
 
 
-# for vec in sums:
-#     k = model.similar_by_vector(vec, topn =1)
-#     print (k)
-
-def search_search(word, sums = sums, raw = raw):   
-    cosines = model.cosine_similarities(model.get_vector(word), sums)
-    print (type(cosines))
-    print (cosines.shape)
-    cos_s = cosines.copy()
-    cos_s.sort()
-    while np.isnan(cos_s[-1]):
-        cos_s = np.delete(cos_s, -1)
-        print ('deleted')
-    index = np.where(cosines == cos_s[-1])
-    print ('Нашлась хуйня номер ', str(index[0])[1:-1])
-    print (index)
-    print ('ok')
-    return int(str(index[0])[1:-1]) 
-
-ss = search_search('гоблин_NOUN')
-print (kfc[ss])
-print('========================================')
+vectores = 'saved copy.txt'
 
 
-def search_by_vec(doc, word):
-    sums = open(doc, 'r').readlines()
-    sums1 = []
-    for vec in sums:
-        vec = [float (vec) for vec in re.split(" ", vec)]
-        sums1.append(vec)
-    sums = np.vstack(sums1)    
-    cosines = model.cosine_similarities(model.get_vector(word), sums)
-    cos_s = cosines.copy()
-    cos_s.sort()
-    
-    while np.isnan(cos_s[-1]):
-        cos_s = np.delete(cos_s, -1)
-        print ('deleted')
-    np.savetxt('to.txt', cos_s)
-    index = np.where(cosines == cos_s[-1])
+ans = search_in_sums_doc(vectores, word, n=3)
 
-    print (index)
+print ('=======from doc=========not divided===============================')
+for i in ans:
+    print ('Отрывок {}'.format(i))
+    print (output[i])
 
-    return int(str(index[0])[1:-1]) 
+print ('Запрос: ', word , '\n')
 
-vectores = 'saved.txt'
-word = 'космос_NOUN'
+print(datetime.now() - begin_time)
 
-qw = search_by_vec(vectores, word)
-
-print (kfc[qw])
-
-print ('===============================================')
 
 
 
